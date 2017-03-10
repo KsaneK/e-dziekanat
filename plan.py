@@ -65,8 +65,9 @@ class eDziekanat:
                 print("\t\t[FAIL]")
         self.parse(timetable_req.content.decode("iso-8859-2").split("\r\n"))
     def parse(self, lessons):
+        """Przetwarzanie planu pobranego z e-dziekanatu i zapisanie go do zmiennej"""
         # zamiany godziny rozpoczęcia zajęć na numer bloku
-        print("Przetwarzanie pliku... ", end='')
+        print("Przetwarzanie danych... ", end='')
         hours = {
             "08:00": "0",
 			"09:50": "1",
@@ -76,9 +77,17 @@ class eDziekanat:
 			"17:35": "5",
 			"19:25": "6"
         }
-        for lesson in lessons[1:]:
-            if not lesson:
-                continue
+        # wyrzucamy pierwszy i ostatni element
+        # pierwszy to etykiety, ostatni jest pusty
+        lessons = lessons[1:-1]
+        startday = lessons[0].split(",")[2]
+        endday = lessons[-1].split(",")[2]
+        startday = datetime.datetime.strptime(startday, "%Y-%m-%d")
+        endday = datetime.datetime.strptime(endday ,"%Y-%m-%d")
+        self.startday = startday - datetime.timedelta(days=startday.weekday())
+        self.endday = endday + datetime.timedelta(days=4-endday.weekday())
+
+        for lesson in lessons:
             l = lesson.split(",")
             l[3] = hours[l[3]]
             # index końca nazwy przedmiotu
@@ -94,7 +103,14 @@ class eDziekanat:
                 self.timetable[l[3]] = [[] for i in range(7)]
             # wpisanie bloku zajęć w odpowiednie miejsce na liście
             self.timetable[l[3]][int(l[4])] = [l[0], l[1], l[2]]
-        print("\t\t\t\t[OK]")
+        print("\t\t\t[OK]")
+    def export_to_json(self, group):
+        with codecs.open("%s/%s.json" % (self.output_dir, group), "w", "utf-8") as f:
+            json.dump(self.timetable, f)
+        with open("%s/%s_daterange.txt" % (self.output_dir, group), "w") as f:
+            f.write(self.startday.strftime("%Y-%m-%d"))
+            f.write("\n")
+            f.write(self.endday.strftime("%Y-%m-%d"))
 
 
 if __name__ == "__main__":
@@ -106,4 +122,8 @@ if __name__ == "__main__":
         groups = groups.split(",")
     ed = eDziekanat(username, password, output)
     ed.login()
-    ed.get_timetable("I6Y4S1")
+    for group in groups:
+        ed.get_timetable(group)
+        ed.export_to_json(group)
+    with open("%s/lastup.txt" % self.output_dir, "w") as f:
+    	f.write((datetime.datetime.now()).strftime("%Y-%m-%d %H:%M:%S"))
