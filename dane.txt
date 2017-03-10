@@ -1,0 +1,4 @@
+username=Kowalski
+password=tajne
+output=/var/www/html
+grupy=I6Y1S1,I6Y2S1,I6Y4S1,I6X5S1,K6X2S1,H6X2S1
