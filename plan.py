@@ -125,5 +125,6 @@ if __name__ == "__main__":
     for group in groups:
         ed.get_timetable(group)
         ed.export_to_json(group)
-    with open("%s/lastup.txt" % self.output_dir, "w") as f:
+        ed.timetable = {}
+    with open("%s/lastup.txt" % ed.output_dir, "w") as f:
     	f.write((datetime.datetime.now()).strftime("%Y-%m-%d %H:%M:%S"))
